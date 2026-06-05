@@ -44,9 +44,9 @@ _PHONE_RE = re.compile(
             |
             (?P<area2>[2-9]\d{2})      # NPA without parens
         )
-        [\s.\-]?                     # separator
+        (?P<sep1>[\s.\-]?)           # separator (area -> exchange)
         (?P<exchange>[2-9]\d{2})     # exchange (NXX)
-        [\s.\-]?                     # separator
+        (?P<sep2>[\s.\-]?)           # separator (exchange -> subscriber)
         (?P<subscriber>\d{4})        # subscriber number
     )
     (?!\d)                           # not followed by a digit
@@ -62,6 +62,14 @@ def _is_valid_phone(m: re.Match[str]) -> bool:
     exchange = m.group("exchange")
 
     if area is None or exchange is None:
+        return False
+
+    # Separator consistency: an un-parenthesized number must group its 10 digits
+    # uniformly — either fully separated (650-300-7562 / 650.300.7562 / 650 300 7562)
+    # or fully joined (6503007562). A mix (no separator between area and exchange
+    # but one before the subscriber, e.g. "650300 7562") is not a real phone
+    # grouping — it's a part number that coincidentally has a valid NPA/NXX.
+    if m.group("area1") is None and bool(m.group("sep1")) != bool(m.group("sep2")):
         return False
 
     # Area code cannot be an N11 or start with 0/1

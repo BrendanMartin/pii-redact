@@ -50,6 +50,7 @@ class TestPhone:
             ("Call 1-561-845-1234", "1-561-845-1234"),
             ("ph: (212) 555-1234", "(212) 555-1234"),
             ("fax 800-555-0199", "800-555-0199"),
+            ("5618451234", "5618451234"),       # fully joined 10 digits — still valid
         ],
     )
     def test_positive(self, text: str, expected: str) -> None:
@@ -66,6 +67,8 @@ class TestPhone:
             "REV D",            # revision letter
             "3.250 x 1.750",   # dimensions
             "DWG 1234-5678",   # drawing number (only 8 digits)
+            "650300 7562",      # part number — 6 joined digits + space + 4 (inconsistent grouping)
+            "234567 8901",      # same shape, valid NPA/NXX by luck — must not match
         ],
     )
     def test_negative(self, text: str) -> None:
